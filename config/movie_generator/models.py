@@ -1,15 +1,4 @@
-# from django.db import models
 
-# class Author(models.Model):
-#     name = models.CharField(max_length=255)
-
-# class Movie(models.Model):
-#     title = models.CharField(max_length=150)
-#     published_at = models.DateField()
-#     description = models.TextField(null=True)
-    
-#     def __str__(self):
-#         return self.title
 from django.db import models
 
 class Author(models.Model):
@@ -36,10 +25,9 @@ class Tag(models.Model):
 
 class Movie(models.Model):
     title = models.CharField(max_length=150, verbose_name="Название")
-    published_at = models.DateField(verbose_name="Дата выхода")
+    published_at = models.DateTimeField(verbose_name="Дата выхода")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
     
-    # Связи
     authors = models.ManyToManyField(Author, verbose_name="Авторы")
     tags = models.ManyToManyField(Tag, verbose_name="Теги")
     
