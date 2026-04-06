@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Страна")
     
@@ -25,7 +26,7 @@ class Genre(models.Model):
 
 class Actor(models.Model):
     name = models.CharField(max_length=255, verbose_name="Имя актера")
-    photo = models.ImageField(upload_to='actors/', blank=True, null=True, verbose_name="Фото")
+    photo = models.URLField(max_length=500, blank=True, null=True, verbose_name="Фото (URL)")
     
     class Meta:
         verbose_name = "Актер"
@@ -38,7 +39,7 @@ class Actor(models.Model):
 class Movie(models.Model):
     title = models.CharField(max_length=200, verbose_name="Название")
     description = models.TextField(verbose_name="Описание")
-    poster = models.ImageField(upload_to='posters/', verbose_name="Постер")
+    poster = models.URLField(max_length=500, verbose_name="Постер (URL)")
     release_date = models.DateField(verbose_name="Дата выхода")
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, verbose_name="Страна")
     genres = models.ManyToManyField(Genre, verbose_name="Жанры")
