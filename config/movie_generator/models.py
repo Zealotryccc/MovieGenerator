@@ -66,7 +66,6 @@ class Movie(models.Model):
     
     @property
     def average_rating(self):
-        """Средний рейтинг фильма"""
         reviews = self.reviews.all()
         if reviews:
             return round(sum(r.rating for r in reviews) / len(reviews), 1)
