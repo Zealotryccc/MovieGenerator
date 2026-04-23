@@ -13,13 +13,3 @@ router.register(r'tags', views.TagViewSet)
 urlpatterns = [
     path('', include(router.urls)),
 ]
-
-# Дополнительные URL для специфических действий
-urlpatterns += [
-    path('movies/<int:pk>/add_review/', 
-         views.MovieViewSet.as_view({'post': 'add_review'}), 
-         name='movie-add-review'),
-    path('movies/<int:pk>/similar/', 
-         views.MovieViewSet.as_view({'get': 'similar_movies'}), 
-         name='movie-similar'),
-]

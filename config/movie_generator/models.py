@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.utils import timezone
 
 class Country(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Страна")
@@ -54,7 +54,7 @@ class Movie(models.Model):
         ],
         verbose_name="Возрастной рейтинг"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     
     class Meta:
         verbose_name = "Фильм"
