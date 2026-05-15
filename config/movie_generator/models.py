@@ -2,8 +2,9 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
+
 class Country(models.Model):
-    name = models.CharField(max_length=100, unique=True, verbose_name="Страна")
+    name = models.CharField(max_length=100, unique=True)
     
     class Meta:
         verbose_name = "Страна"
@@ -14,7 +15,7 @@ class Country(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Жанр")
+    name = models.CharField(max_length=50, unique=True)
     
     class Meta:
         verbose_name = "Жанр"
@@ -25,34 +26,30 @@ class Genre(models.Model):
 
 
 class Actor(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Имя актера")
-    photo = models.URLField(max_length=500, blank=True, null=True, verbose_name="Фото (URL)")
+    name = models.CharField(max_length=255)
+    photo = models.URLField(max_length=500, blank=True, null=True)
     
     class Meta:
-        verbose_name = "Актер"
-        verbose_name_plural = "Актеры"
+        verbose_name = "Актёр"
+        verbose_name_plural = "Актёры"
     
     def __str__(self):
         return self.name
 
 
 class Movie(models.Model):
-    title = models.CharField(max_length=200, verbose_name="Название")
-    description = models.TextField(verbose_name="Описание")
-    poster = models.URLField(max_length=500, verbose_name="Постер (URL)")
-    release_date = models.DateField(verbose_name="Дата выхода")
-    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, verbose_name="Страна")
-    genres = models.ManyToManyField(Genre, verbose_name="Жанры")
-    actors = models.ManyToManyField(Actor, verbose_name="Актеры")
-    director = models.CharField(max_length=255, verbose_name="Режиссер")
-    duration = models.PositiveIntegerField(verbose_name="Длительность (мин)")
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    poster = models.URLField(max_length=500)
+    release_date = models.DateField()
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+    genres = models.ManyToManyField(Genre)
+    actors = models.ManyToManyField(Actor)
+    director = models.CharField(max_length=255)
+    duration = models.PositiveIntegerField(help_text="Продолжительность в минутах")
     age_rating = models.CharField(
         max_length=5,
-        choices=[
-            ('0+', '0+'), ('6+', '6+'), ('12+', '12+'), 
-            ('16+', '16+'), ('18+', '18+')
-        ],
-        verbose_name="Возрастной рейтинг"
+        choices=[('0+', '0+'), ('6+', '6+'), ('12+', '12+'), ('16+', '16+'), ('18+', '18+')]
     )
     created_at = models.DateTimeField(default=timezone.now)
     
@@ -63,23 +60,30 @@ class Movie(models.Model):
     
     def __str__(self):
         return self.title
+
+
+class UserFavorite(models.Model):
+    session_key = models.CharField(max_length=40, db_index=True)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='favorites')
+    is_favorite = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     
-    @property
-    def average_rating(self):
-        reviews = self.reviews.all()
-        if reviews:
-            return round(sum(r.rating for r in reviews) / len(reviews), 1)
-        return 0
+    class Meta:
+        unique_together = ['session_key', 'movie']
+        verbose_name = "Избранный фильм"
+        verbose_name_plural = "Избранные фильмы"
+    
+    def __str__(self):
+        return f"{self.movie.title} (сессия: {self.session_key[:10]}...)"
 
 
 class Review(models.Model):
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews', verbose_name="Фильм")
-    author = models.CharField(max_length=100, verbose_name="Автор")
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
+    author = models.CharField(max_length=100)
     rating = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        verbose_name="Рейтинг"
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    text = models.TextField(verbose_name="Текст отзыва")
+    text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -92,7 +96,7 @@ class Review(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Тег")
+    name = models.CharField(max_length=50, unique=True)
     
     class Meta:
         verbose_name = "Тег"
