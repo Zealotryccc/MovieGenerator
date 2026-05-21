@@ -1,15 +1,17 @@
 # services.py
 from django.db.models import Q, Avg, Count
+from django.db.models.functions import ExtractYear
 from django.utils import timezone
 from datetime import timedelta
-from models import Movie, Country, Genre, Actor, Review, UserFavorite, Tag
+from .models import Movie, Country, Genre, Actor, Review, UserFavorite, Tag
 
 
 class MovieService:
     
     @staticmethod
-    def get_movies_by_filters(title=None, country_id=None, genre_id=None, 
-                               min_rating=None, max_rating=None, 
+    def get_movies_by_filters(title=None, country_id=None, genre_id=None,
+                               genre_name=None, tag_id=None, tag_name=None,
+                               min_rating=None, max_rating=None,
                                min_year=None, max_year=None,
                                director=None, age_rating=None):
         queryset = Movie.objects.all()
@@ -22,7 +24,14 @@ class MovieService:
         
         if genre_id:
             queryset = queryset.filter(genres__id=genre_id)
-        
+        elif genre_name:
+            queryset = queryset.filter(genres__name__icontains=genre_name)
+
+        if tag_id:
+            queryset = queryset.filter(tags__id=tag_id)
+        elif tag_name:
+            queryset = queryset.filter(tags__name__icontains=tag_name)
+
         if min_year:
             queryset = queryset.filter(release_date__year__gte=min_year)
         
@@ -72,9 +81,6 @@ class MovieService:
     
     @staticmethod
     def get_new_releases(days=30):
-        """
-        Получить новинки за последние N дней
-        """
         since_date = timezone.now().date() - timedelta(days=days)
         return Movie.objects.filter(release_date__gte=since_date).order_by('-release_date')
     
@@ -100,6 +106,19 @@ class MovieService:
             Q(actors__name__icontains=query) |
             Q(description__icontains=query)
         ).distinct()
+
+    @staticmethod
+    def get_similar_movies(movie, limit=5):
+        genre_ids = movie.genres.values_list('id', flat=True)
+        if not genre_ids:
+            return Movie.objects.none()
+        return Movie.objects.filter(
+            genres__id__in=genre_ids
+        ).exclude(
+            id=movie.id
+        ).annotate(
+            common_genres=Count('genres', filter=Q(genres__id__in=genre_ids))
+        ).order_by('-common_genres')[:limit]
 
 
 class ReviewService:
@@ -183,9 +202,6 @@ class StatisticsService:
     
     @staticmethod
     def get_general_stats():
-        """
-        Получить общую статистику по сайту
-        """
         return {
             'total_movies': Movie.objects.count(),
             'total_actors': Actor.objects.count(),
@@ -215,27 +231,16 @@ class StatisticsService:
         return Actor.objects.annotate(
             movies_count=Count('movie')
         ).order_by('-movies_count')[:limit]
-    
 
     @staticmethod
-    def get_similar_movies(movie, limit=5):
-        """
-        Получить похожие фильмы на основе общих жанров
-        """
-        from movie_generator.models import Movie
-        
-        # Находим фильмы с такими же жанрами
-        genre_ids = movie.genres.values_list('id', flat=True)
-        similar = Movie.objects.filter(
-            genres__id__in=genre_ids
-        ).exclude(
-            id=movie.id
-        ).annotate(
-            common_genres=Count('genres', filter=Q(genres__id__in=genre_ids))
-        ).order_by('-common_genres')[:limit]
-        
-        return similar
-    
+    def get_yearly_stats():
+        return list(
+            Movie.objects.annotate(year=ExtractYear('release_date'))
+            .values('year')
+            .annotate(movies_count=Count('id'))
+            .order_by('year')
+        )
+
     # @staticmethod
     # def get_popular_tags(limit=20):
     #     """

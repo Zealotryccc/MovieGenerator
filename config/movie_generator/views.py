@@ -1,19 +1,21 @@
 # views.py
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from django.db.models import Avg
 from .models import Country, Genre, Actor, Movie, Review, Tag
+from .session_utils import get_or_create_session_key
 from .serializers import (
     CountrySerializer, GenreSerializer, ActorSerializer,
     MovieListSerializer, MovieDetailSerializer, MovieCreateUpdateSerializer,
     ReviewSerializer, TagSerializer
 )
-# Импортируем сервисы
 from .services import (
-    MovieService, ReviewService, FavoriteService, 
-    StatisticsService, TagService
+    MovieService, ReviewService, FavoriteService,
+    StatisticsService,
 )
 
 
@@ -41,10 +43,28 @@ class TagViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
 
+FAVORITE_ACTIONS = ('add_to_favorites', 'remove_from_favorites', 'is_favorite')
+
+
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
-    
+
+    def get_permissions(self):
+        if getattr(self, 'action', None) in FAVORITE_ACTIONS:
+            return [AllowAny()]
+        return super().get_permissions()
+
+    def get_authenticators(self):
+        if getattr(self, 'action', None) in FAVORITE_ACTIONS:
+            return []
+        return super().get_authenticators()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def get_serializer_class(self):
         if self.action == 'list':
             return MovieListSerializer
@@ -53,37 +73,76 @@ class MovieViewSet(viewsets.ModelViewSet):
         return MovieDetailSerializer
     
     def get_queryset(self):
-        # Используем MovieService для фильтрации
         title = self.request.query_params.get('search')
         country_id = self.request.query_params.get('country')
-        genre_id = self.request.query_params.get('genre')
+        genre_param = self.request.query_params.get('genre')
+        genre_name = self.request.query_params.get('genre_name')
+        genre_id = None
+        if genre_param and str(genre_param).isdigit():
+            genre_id = genre_param
+        elif genre_param:
+            genre_name = genre_param
+
+        tag_param = self.request.query_params.get('tag')
+        tag_name = self.request.query_params.get('tag_name')
+        tag_id = None
+        if tag_param and str(tag_param).isdigit():
+            tag_id = tag_param
+        elif tag_param:
+            tag_name = tag_param
+        director = self.request.query_params.get('director')
+        age_rating = self.request.query_params.get('age_rating')
+
         min_rating = self.request.query_params.get('min_rating')
         max_rating = self.request.query_params.get('max_rating')
         min_year = self.request.query_params.get('min_year')
         max_year = self.request.query_params.get('max_year')
-        director = self.request.query_params.get('director')
-        age_rating = self.request.query_params.get('age_rating')
-        
-        # Получаем отфильтрованные фильмы через сервис
+        if min_rating is not None:
+            try:
+                min_rating = float(min_rating)
+            except ValueError:
+                min_rating = None
+        if max_rating is not None:
+            try:
+                max_rating = float(max_rating)
+            except ValueError:
+                max_rating = None
+        if min_year is not None:
+            try:
+                min_year = int(min_year)
+            except ValueError:
+                min_year = None
+        if max_year is not None:
+            try:
+                max_year = int(max_year)
+            except ValueError:
+                max_year = None
+
         queryset = MovieService.get_movies_by_filters(
             title=title,
             country_id=country_id,
             genre_id=genre_id,
+            genre_name=genre_name,
+            tag_id=tag_id,
+            tag_name=tag_name,
             min_rating=min_rating,
             max_rating=max_rating,
             min_year=min_year,
             max_year=max_year,
             director=director,
-            age_rating=age_rating
+            age_rating=age_rating,
         )
-        
-        # Сортировка
+
         ordering = self.request.query_params.get('ordering', '-release_date')
-        if ordering in ['title', '-title', 'release_date', '-release_date', 
-                        'duration', '-duration', 'created_at', '-created_at',
-                        'avg_rating', '-avg_rating']:
+        if ordering in ('avg_rating', '-avg_rating'):
+            queryset = queryset.annotate(avg_rating=Avg('reviews__rating'))
+        if ordering in [
+            'title', '-title', 'release_date', '-release_date',
+            'duration', '-duration', 'created_at', '-created_at',
+            'avg_rating', '-avg_rating',
+        ]:
             queryset = queryset.order_by(ordering)
-        
+
         return queryset
     
     @action(detail=False, methods=['get'])
@@ -126,7 +185,6 @@ class MovieViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def new_releases(self, request):
-        """Получить новинки"""
         days = request.query_params.get('days', 30)
         
         try:
@@ -156,7 +214,6 @@ class MovieViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def add_review(self, request, pk=None):
-        """Добавить отзыв к фильму через сервис"""
         movie = self.get_object()
         author = request.user.username if request.user.is_authenticated else request.data.get('author', "Anonymous")
         rating = request.data.get('rating')
@@ -181,7 +238,6 @@ class MovieViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def similar_movies(self, request, pk=None):
-        """Получить похожие фильмы на основе жанров"""
         movie = self.get_object()
         similar_movies = MovieService.get_similar_movies(movie, limit=5)
         serializer = MovieListSerializer(similar_movies, many=True)
@@ -189,58 +245,79 @@ class MovieViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def add_to_favorites(self, request, pk=None):
-        """Добавить фильм в избранное"""
-        # Получаем или создаем session_key
-        session_key = request.session.session_key
-        if not session_key:
-            request.session.create()
-            session_key = request.session.session_key
-        
+        session_key = get_or_create_session_key(request)
         favorite, created = FavoriteService.add_to_favorites(session_key, pk)
-        
         if favorite:
             return Response(
                 {'message': 'Added to favorites', 'created': created},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
-        
         return Response(
             {'error': 'Movie not found'},
-            status=status.HTTP_404_NOT_FOUND
+            status=status.HTTP_404_NOT_FOUND,
         )
-    
+
     @action(detail=True, methods=['post'])
     def remove_from_favorites(self, request, pk=None):
-        """Удалить фильм из избранного"""
-        session_key = request.session.session_key
-        if not session_key:
-            return Response(
-                {'error': 'Session not found'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        removed = FavoriteService.remove_from_favorites(session_key, pk)
-        
-        if removed:
-            return Response(
-                {'message': 'Removed from favorites'},
-                status=status.HTTP_200_OK
-            )
-        
+        session_key = get_or_create_session_key(request)
+        if FavoriteService.remove_from_favorites(session_key, pk):
+            return Response({'message': 'Removed from favorites'})
         return Response(
             {'error': 'Movie not in favorites'},
-            status=status.HTTP_404_NOT_FOUND
+            status=status.HTTP_404_NOT_FOUND,
         )
-    
+
     @action(detail=True, methods=['get'])
     def is_favorite(self, request, pk=None):
-        """Проверить, добавлен ли фильм в избранное"""
         session_key = request.session.session_key
         if not session_key:
             return Response({'is_favorite': False})
-        
-        is_fav = FavoriteService.is_favorite(session_key, pk)
-        return Response({'is_favorite': is_fav})
+        return Response({
+            'is_favorite': FavoriteService.is_favorite(session_key, pk),
+        })
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class FavoriteViewSet(viewsets.ViewSet):
+    """Избранное по sessionid-cookie (без регистрации)."""
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def list(self, request):
+        session_key = get_or_create_session_key(request)
+        movies = FavoriteService.get_user_favorites(session_key)
+        serializer = MovieListSerializer(
+            movies, many=True, context={'request': request},
+        )
+        return Response(serializer.data)
+
+    def create(self, request):
+        movie_id = request.data.get('movie_id')
+        if not movie_id:
+            return Response(
+                {'error': 'movie_id is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        session_key = get_or_create_session_key(request)
+        favorite, created = FavoriteService.add_to_favorites(session_key, movie_id)
+        if favorite:
+            return Response(
+                {'message': 'Added to favorites', 'created': created},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {'error': 'Movie not found'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    def destroy(self, request, pk=None):
+        session_key = get_or_create_session_key(request)
+        if FavoriteService.remove_from_favorites(session_key, pk):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Movie not in favorites'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -267,7 +344,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def movie_rating(self, request, pk=None):
-        """Получить средний рейтинг для отзыва (или для фильма)"""
         movie_id = request.query_params.get('movie')
         if movie_id:
             avg_rating, count = ReviewService.get_average_rating(movie_id)
@@ -284,7 +360,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class StatisticsViewSet(viewsets.ViewSet):
-    """ViewSet для статистики"""
     permission_classes = [AllowAny]
     
     @action(detail=False, methods=['get'])
@@ -309,7 +384,6 @@ class StatisticsViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['get'])
     def by_country(self, request):
-        """Статистика по странам"""
         stats = StatisticsService.get_country_stats()
         data = [
             {
@@ -344,6 +418,5 @@ class StatisticsViewSet(viewsets.ViewSet):
     
     @action(detail=False, methods=['get'])
     def yearly(self, request):
-        """Статистика по годам"""
         stats = StatisticsService.get_yearly_stats()
         return Response(stats)

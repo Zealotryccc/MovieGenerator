@@ -27,6 +27,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    rating = serializers.IntegerField(min_value=1, max_value=10)
+
     class Meta:
         model = Review
         fields = ['id', 'movie', 'author', 'rating', 'text', 'created_at']
@@ -36,30 +38,32 @@ class ReviewSerializer(serializers.ModelSerializer):
 class MovieListSerializer(serializers.ModelSerializer):
     country = serializers.StringRelatedField()
     genres = serializers.StringRelatedField(many=True)
+    tags = serializers.StringRelatedField(many=True)
     is_favorited = serializers.SerializerMethodField()
     
     class Meta:
         model = Movie
         fields = [
             'id', 'title', 'poster', 'release_date',
-            'country', 'genres', 'duration', 'age_rating', 'is_favorited'
+            'country', 'genres', 'tags', 'duration', 'age_rating', 'is_favorited'
         ]
     
     def get_is_favorited(self, obj):
-        # Получаем request из контекста
         request = self.context.get('request')
-        if request and request.session.session_key:
-            return UserFavorite.objects.filter(
-                session_key=request.session.session_key,
-                movie=obj,
-                is_favorite=True
-            ).exists()
-        return False
+        session_key = getattr(request, 'session', None) and request.session.session_key
+        if not session_key:
+            return False
+        return UserFavorite.objects.filter(
+            session_key=session_key,
+            movie=obj,
+            is_favorite=True,
+        ).exists()
 
 
 class MovieDetailSerializer(serializers.ModelSerializer):
     country = CountrySerializer(read_only=True)
     genres = GenreSerializer(many=True, read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
     actors = ActorSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -68,7 +72,7 @@ class MovieDetailSerializer(serializers.ModelSerializer):
         model = Movie
         fields = [
             'id', 'title', 'description', 'poster', 'release_date',
-            'country', 'genres', 'actors', 'director', 'duration',
+            'country', 'genres', 'tags', 'actors', 'director', 'duration',
             'age_rating', 'created_at', 'reviews', 'is_favorited'
         ]
     
@@ -87,7 +91,7 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
         model = Movie
         fields = [
             'id', 'title', 'description', 'poster', 'release_date',
-            'country', 'genres', 'actors', 'director', 'duration', 'age_rating'
+            'country', 'genres', 'tags', 'actors', 'director', 'duration', 'age_rating'
         ]
         read_only_fields = ['id']
 
@@ -103,7 +107,6 @@ class UserFavoriteSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'session_key']
     
     def create(self, validated_data):
-        # Извлекаем movie_id из данных
         movie_id = validated_data.pop('movie_id', None)
         if movie_id:
             try:

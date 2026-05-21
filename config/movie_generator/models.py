@@ -44,6 +44,7 @@ class Movie(models.Model):
     release_date = models.DateField()
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
     genres = models.ManyToManyField(Genre)
+    tags = models.ManyToManyField('Tag', blank=True)
     actors = models.ManyToManyField(Actor)
     director = models.CharField(max_length=255)
     duration = models.PositiveIntegerField(help_text="Продолжительность в минутах")
