@@ -15,7 +15,7 @@ class ActorAdmin(admin.ModelAdmin):
 
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
-    filter_horizontal = ('genres', 'actors')  # 👈 КЛЮЧЕВОЙ МОМЕНТ
+    filter_horizontal = ('genres', 'actors')
     list_display = ('title', 'release_date', 'country', 'duration')
     list_filter = ('genres', 'country', 'release_date', 'age_rating')
     search_fields = ('title', 'director', 'actors__name')

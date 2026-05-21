@@ -9,6 +9,7 @@ router.register(r'genres', views.GenreViewSet)
 router.register(r'countries', views.CountryViewSet)
 router.register(r'reviews', views.ReviewViewSet)
 router.register(r'tags', views.TagViewSet)
+router.register(r'statistics', views.StatisticsViewSet, basename='statistics')
 
 urlpatterns = [
     path('', include(router.urls)),
