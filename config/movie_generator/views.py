@@ -44,6 +44,7 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 FAVORITE_ACTIONS = ('add_to_favorites', 'remove_from_favorites', 'is_favorite')
+GUEST_WRITE_ACTIONS = FAVORITE_ACTIONS + ('add_review',)
 
 
 class MovieViewSet(viewsets.ModelViewSet):
@@ -51,12 +52,12 @@ class MovieViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_permissions(self):
-        if getattr(self, 'action', None) in FAVORITE_ACTIONS:
+        if getattr(self, 'action', None) in GUEST_WRITE_ACTIONS:
             return [AllowAny()]
         return super().get_permissions()
 
     def get_authenticators(self):
-        if getattr(self, 'action', None) in FAVORITE_ACTIONS:
+        if getattr(self, 'action', None) in GUEST_WRITE_ACTIONS:
             return []
         return super().get_authenticators()
 
