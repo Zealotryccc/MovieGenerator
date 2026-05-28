@@ -12,7 +12,6 @@ type Props = {
   movie: MovieListItem;
 };
 
-/** Карточка в списке — стили в styles/movie-card.ts */
 export function MovieCard({ movie }: Props) {
   return (
     <Pressable onPress={() => router.push(`/movie/${movie.id}`)}>

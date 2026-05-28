@@ -30,7 +30,14 @@ npm start
 
 ## Как менять дизайн
 
-См. **[UI_GUIDE.md](./UI_GUIDE.md)** — там таблица: какой файл за что отвечает.
+Теперь всё проще: меняйте экраны прямо в этих файлах:
+
+- `src/app/(tabs)/index.tsx` — главная (фильмы)
+- `src/app/(tabs)/favorites.tsx` — избранное
+- `src/app/(tabs)/explore.tsx` — обзор
+- `src/app/movie/[id].tsx` — подробная страница фильма
+
+Тексты в одном месте: `src/constants/ui-text.ts`
 
 ## Экраны
 

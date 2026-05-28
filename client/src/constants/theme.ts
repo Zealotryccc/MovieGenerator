@@ -1,8 +1,10 @@
 /**
  * Глобальные цвета и отступы.
- * Тексты экранов: constants/ui-text.ts
- * Стили каждого экрана: styles/*-screen.ts
- * Подробнее: UI_GUIDE.md в корне client/
+ * Большая часть экранных стилей теперь лежит прямо в файлах:
+ * - src/app/(tabs)/index.tsx
+ * - src/app/(tabs)/favorites.tsx
+ * - src/app/(tabs)/explore.tsx
+ * - src/app/movie/[id].tsx
  */
 
 import '@/global.css';
