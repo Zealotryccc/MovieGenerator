@@ -48,10 +48,11 @@ export default function MovieDetailPage() {
     if (!movie) return;
     try {
       if (movie.is_favorited) {
-        await movieApi.removeFavorite(movie.id);
+        await movieApi.removeFromFavoritesByMovie(movie.id);
       } else {
-        await movieApi.addFavorite(movie.id);
+        await movieApi.addToFavoritesByMovie(movie.id);
       }
+      setMovie({ ...movie, is_favorited: !movie.is_favorited });
       await load();
     } catch {
       Alert.alert('Ошибка', 'Не удалось обновить избранное');
@@ -81,23 +82,35 @@ export default function MovieDetailPage() {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-      <Image source={{ uri: movie.poster }} style={styles.poster} contentFit="contain" />
+      {/* Верхняя часть: картинка слева, заголовок и описание справа */}
+      <View style={styles.headerRow}>
+        <Image source={{ uri: movie.poster }} style={styles.poster} contentFit="cover" />
+        <View style={styles.headerRight}>
+          <ThemedText type="subtitle" style={styles.title}>
+            {movie.title}
+          </ThemedText>
 
-      <ThemedText type="subtitle" style={styles.title}>
-        {movie.title}
-      </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
+            {movie.director} · {movie.country?.name} · {movie.duration} мин · {movie.age_rating}
+          </ThemedText>
 
-      <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
-        {movie.director} · {movie.country?.name} · {movie.duration} мин · {movie.age_rating}
-      </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
+            {movie.genres.map((g) => g.name).join(', ')}
+          </ThemedText>
 
-      <ThemedText type="small" themeColor="textSecondary" style={styles.meta}>
-        {movie.genres.map((g) => g.name).join(', ')}
-      </ThemedText>
+          {/* Описание теперь здесь, под мета-информацией */}
+          <ThemedText style={styles.description} numberOfLines={5}>
+            {movie.description}
+          </ThemedText>
+        </View>
+      </View>
 
-      <ThemedText style={styles.description}>{movie.description}</ThemedText>
-
-      <Pressable onPress={toggleFavorite} style={styles.primaryButton}>
+      <Pressable
+        onPress={toggleFavorite}
+        style={[
+          styles.primaryButton,
+          { backgroundColor: theme.backgroundSelected },
+        ]}>
         <ThemedText type="smallBold">
           {movie.is_favorited ? uiText.movieDetail.favoriteRemove : uiText.movieDetail.favoriteAdd}
         </ThemedText>
@@ -154,29 +167,79 @@ export default function MovieDetailPage() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { padding: Spacing.four, gap: Spacing.three },
-  poster: { width: '100%', height: 400, borderRadius: 16 },
-  title: { fontSize: 28, fontWeight: '700' },
-  meta: { lineHeight: 20 },
-  description: { fontSize: 16, lineHeight: 24 },
+  content: { 
+    padding: Spacing.three, 
+    gap: Spacing.three 
+  },
+  
+
+  headerRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+    alignItems: 'flex-start',
+  },
+  
+  poster: {
+    width: '15%',        
+    aspectRatio: 2 / 3,
+    borderRadius: 12,
+    marginTop: 4,        
+  },
+  
+  headerRight: {
+    flex: 1,            
+    gap: Spacing.one,
+  },
+  
+  title: { 
+    fontSize: 20,
+    fontWeight: '700', 
+    lineHeight: 26,
+    flexWrap: 'wrap',
+  },
+  
+  meta: { 
+    lineHeight: 18, 
+    fontSize: 12,
+    flexWrap: 'wrap',
+  },
+  
+  description: { 
+    fontSize: 13,        // Чуть меньше шрифт
+    lineHeight: 18, 
+    marginTop: Spacing.one,
+    color: '#666',       // Немного светлее для читаемости
+  },
+  
   primaryButton: {
     alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.five,
-    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
     borderRadius: 12,
   },
+  
   section: {
-    gap: Spacing.three,
-    marginTop: Spacing.two,
-    padding: Spacing.four,
-    borderRadius: 16,
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: 12,
   },
+  
   input: {
     borderWidth: 1,
     borderRadius: 12,
     padding: Spacing.three,
     fontSize: 16,
   },
-  inputMultiline: { minHeight: 100, textAlignVertical: 'top' },
-  reviewCard: { padding: Spacing.three, borderRadius: 12, gap: Spacing.one },
+  
+  inputMultiline: { 
+    minHeight: 100, 
+    textAlignVertical: 'top' 
+  },
+  
+  reviewCard: { 
+    padding: Spacing.three, 
+    borderRadius: 12, 
+    gap: Spacing.one 
+  },
 });

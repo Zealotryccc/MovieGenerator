@@ -1,27 +1,27 @@
 import { StyleSheet } from 'react-native';
-
 import { Spacing } from '@/constants/theme';
 
-/** Стили карточки фильма в списках. */
 export const movieCardStyles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: 16,
+    backgroundColor: 'transparent',
+    padding: 0,
+    borderRadius: 0,
   },
   poster: {
-    width: 80,
-    height: 120,
+    width: '100%',
+    aspectRatio: 2 / 3,
     borderRadius: 12,
+    backgroundColor: '#2a2a2a',
   },
   body: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 6,
+    marginTop: Spacing.one || 4,
+    paddingHorizontal: Spacing.one || 4,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 2,
   },
 });

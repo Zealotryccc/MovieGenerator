@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 
 import { uiText } from '@/constants/ui-text';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { movieCardStyles as s } from '@/styles/movie-card';
 import type { MovieListItem } from '@/api/types';
 
@@ -15,13 +14,13 @@ type Props = {
 export function MovieCard({ movie }: Props) {
   return (
     <Pressable onPress={() => router.push(`/movie/${movie.id}`)}>
-      <ThemedView type="backgroundElement" style={s.card}>
+      <View style={s.card}>
         <Image source={{ uri: movie.poster }} style={s.poster} contentFit="cover" />
         <View style={s.body}>
           <ThemedText style={s.title} numberOfLines={2}>
             {movie.title}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
             {movie.country} · {movie.release_date}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
@@ -33,7 +32,7 @@ export function MovieCard({ movie }: Props) {
             </ThemedText>
           )}
         </View>
-      </ThemedView>
+      </View>
     </Pressable>
   );
 }

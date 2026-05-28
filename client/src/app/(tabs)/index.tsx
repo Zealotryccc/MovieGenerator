@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api/client';
@@ -120,6 +114,8 @@ export default function MoviesPage() {
           <FlatList
             data={movies}
             keyExtractor={(item) => String(item.id)}
+            numColumns={3}
+            columnWrapperStyle={styles.gridRow}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -138,7 +134,11 @@ export default function MoviesPage() {
                 {uiText.movies.empty}
               </ThemedText>
             }
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item }) => (
+              <View style={styles.gridItem}>
+                <MovieCard movie={item} />
+              </View>
+            )}
           />
         )}
       </SafeAreaView>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: Spacing.three,
     paddingVertical: 12,
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.two,
     fontSize: 16,
   },
   genreList: { maxHeight: 48, marginBottom: Spacing.three },
@@ -167,6 +167,14 @@ const styles = StyleSheet.create({
     marginRight: Spacing.two,
   },
   genreChipActive: { opacity: 0.75 },
-  movieList: { gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.five },
+  movieList: { gap: Spacing.one, paddingBottom: BottomTabInset + Spacing.five },
+  gridRow: {
+    justifyContent: 'flex-start',
+    gap:Spacing.three,
+    marginBottom: Spacing.one,
+  },
+  gridItem: {
+    width: '15%',
+  },
   empty: { textAlign: 'center', marginTop: Spacing.five },
 });
