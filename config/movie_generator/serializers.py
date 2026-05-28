@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Country, Genre, Actor, Movie, Review, Tag, UserFavorite
+from .session_utils import get_session_key
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -50,7 +51,9 @@ class MovieListSerializer(serializers.ModelSerializer):
     
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        session_key = getattr(request, 'session', None) and request.session.session_key
+        if not request:
+            return False
+        session_key = get_session_key(request)
         if not session_key:
             return False
         return UserFavorite.objects.filter(
@@ -78,13 +81,16 @@ class MovieDetailSerializer(serializers.ModelSerializer):
     
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        if request and request.session.session_key:
-            return UserFavorite.objects.filter(
-                session_key=request.session.session_key,
-                movie=obj,
-                is_favorite=True
-            ).exists()
-        return False
+        if not request:
+            return False
+        session_key = get_session_key(request)
+        if not session_key:
+            return False
+        return UserFavorite.objects.filter(
+            session_key=session_key,
+            movie=obj,
+            is_favorite=True,
+        ).exists()
 
 class MovieCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:

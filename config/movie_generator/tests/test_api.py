@@ -105,6 +105,25 @@ def test_add_to_favorites(api_client, movie):
 
 
 @pytest.mark.django_db
+def test_favorites_guest_session_header(api_client, movie):
+    """Мобильный клиент: X-Guest-Session без cookie."""
+    guest_id = "guest-mobile-test-session-01"
+    add_url = reverse("favorites-list")
+    response = api_client.post(
+        add_url,
+        {"movie_id": movie.pk},
+        format="json",
+        HTTP_X_GUEST_SESSION=guest_id,
+    )
+    assert response.status_code == 201
+
+    list_response = api_client.get(add_url, HTTP_X_GUEST_SESSION=guest_id)
+    assert list_response.status_code == 200
+    assert len(list_response.data) == 1
+    assert list_response.data[0]["is_favorited"] is True
+
+
+@pytest.mark.django_db
 def test_favorites_session_flow(guest_client, movie):
     """Гость: cookie сессии связывает избранное между запросами."""
     add_url = reverse("favorites-list")

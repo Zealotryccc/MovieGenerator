@@ -13,21 +13,27 @@ type Props = {
 
 export function MovieCard({ movie }: Props) {
   return (
-    <Pressable onPress={() => router.push(`/movie/${movie.id}`)}>
+    <Pressable style={s.pressable} onPress={() => router.push(`/movie/${movie.id}`)}>
       <View style={s.card}>
         <Image source={{ uri: movie.poster }} style={s.poster} contentFit="cover" />
         <View style={s.body}>
           <ThemedText style={s.title} numberOfLines={2}>
             {movie.title}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          <ThemedText
+            style={s.meta}
+            themeColor="textSecondary"
+            numberOfLines={1}>
             {movie.country} · {movie.release_date}
           </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+          <ThemedText
+            style={s.meta}
+            themeColor="textSecondary"
+            numberOfLines={2}>
             {movie.genres.join(', ')}
           </ThemedText>
           {movie.is_favorited && (
-            <ThemedText type="small" themeColor="textSecondary">
+            <ThemedText style={s.meta} themeColor="textSecondary" numberOfLines={1}>
               {uiText.common.favoriteBadge}
             </ThemedText>
           )}

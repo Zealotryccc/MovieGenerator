@@ -9,14 +9,20 @@ pip install -r ../req.txt
 python manage.py runserver 0.0.0.0:8000
 ```
 
-2. **Клиент**:
+2. **Клиент** (после запуска API):
 
 ```bash
 cd client
 npm install
-cp .env.example .env
 npm start
 ```
+
+Для **Expo Web** запросы идут через прокси dev-сервера (`metro.config.js` → Django на порту 8000).  
+После изменения `metro.config.js` перезапустите `npm start`.
+
+Если открываете приложение на **телефоне**, создайте `.env`:
+
+`EXPO_PUBLIC_API_URL=http://IP_ВАШЕГО_ПК:8000/movie_generator`
 
 ## URL API
 

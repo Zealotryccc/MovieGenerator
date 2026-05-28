@@ -23,6 +23,7 @@ export default function MovieDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState('8');
   const [reviewText, setReviewText] = useState('');
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!movieId) return;
@@ -45,17 +46,22 @@ export default function MovieDetailPage() {
   }, [load]);
 
   const toggleFavorite = async () => {
-    if (!movie) return;
+    if (!movie || favoriteBusy) return;
+    setFavoriteBusy(true);
+    const wasFavorited = movie.is_favorited;
+    setMovie({ ...movie, is_favorited: !wasFavorited });
     try {
-      if (movie.is_favorited) {
+      if (wasFavorited) {
         await movieApi.removeFromFavoritesByMovie(movie.id);
       } else {
         await movieApi.addToFavoritesByMovie(movie.id);
       }
-      setMovie({ ...movie, is_favorited: !movie.is_favorited });
-      await load();
+      setMovie(await movieApi.getMovie(movieId));
     } catch {
+      setMovie((prev) => (prev ? { ...prev, is_favorited: wasFavorited } : prev));
       Alert.alert('Ошибка', 'Не удалось обновить избранное');
+    } finally {
+      setFavoriteBusy(false);
     }
   };
 
@@ -98,20 +104,52 @@ export default function MovieDetailPage() {
             {movie.genres.map((g) => g.name).join(', ')}
           </ThemedText>
 
-          {/* Описание теперь здесь, под мета-информацией */}
-          <ThemedText style={styles.description} numberOfLines={5}>
-            {movie.description}
-          </ThemedText>
+          <ThemedText style={styles.description}>{movie.description}</ThemedText>
+
+          {movie.actors.length > 0 && (
+            <View style={styles.actorsBlock}>
+              <ThemedText type="smallBold" style={styles.actorsTitle}>
+                {uiText.movieDetail.actorsTitle}
+              </ThemedText>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.actorsList}>
+                {movie.actors.map((actor) => (
+                  <View key={actor.id} style={styles.actorCard}>
+                    {actor.photo ? (
+                      <Image
+                        source={{ uri: actor.photo }}
+                        style={styles.actorImage}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View style={[styles.actorImage, styles.actorImagePlaceholder]} />
+                    )}
+                    <ThemedText type="small" style={styles.actorName} numberOfLines={2}>
+                      {actor.name}
+                    </ThemedText>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
       </View>
 
       <Pressable
         onPress={toggleFavorite}
+        disabled={favoriteBusy}
         style={[
           styles.primaryButton,
-          { backgroundColor: theme.backgroundSelected },
+          {
+            backgroundColor: movie.is_favorited
+              ? theme.textSecondary
+              : theme.backgroundSelected,
+            opacity: favoriteBusy ? 0.6 : 1,
+          },
         ]}>
-        <ThemedText type="smallBold">
+        <ThemedText type="smallBold" style={movie.is_favorited ? styles.favoriteButtonText : undefined}>
           {movie.is_favorited ? uiText.movieDetail.favoriteRemove : uiText.movieDetail.favoriteAdd}
         </ThemedText>
       </Pressable>
@@ -172,7 +210,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three 
   },
   
-
   headerRow: {
     flexDirection: 'row',
     gap: Spacing.three,
@@ -192,23 +229,30 @@ const styles = StyleSheet.create({
   },
   
   title: { 
-    fontSize: 20,
+    fontSize: 40,
     fontWeight: '700', 
     lineHeight: 26,
     flexWrap: 'wrap',
   },
   
   meta: { 
-    lineHeight: 18, 
-    fontSize: 12,
+    lineHeight: 15, 
+    fontSize: 15,
     flexWrap: 'wrap',
+    marginTop:Spacing.three,
   },
   
-  description: { 
-    fontSize: 13,        // Чуть меньше шрифт
-    lineHeight: 18, 
-    marginTop: Spacing.one,
-    color: '#666',       // Немного светлее для читаемости
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: Spacing.two,
+  },
+  actorsBlock: {
+    marginTop: Spacing.two,
+    gap: Spacing.one,
+  },
+  actorsTitle: {
+    marginBottom: Spacing.one,
   },
   
   primaryButton: {
@@ -216,6 +260,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: 12,
+  },
+  favoriteButtonText: {
+    color: '#fff',
   },
   
   section: {
@@ -241,5 +288,26 @@ const styles = StyleSheet.create({
     padding: Spacing.three, 
     borderRadius: 12, 
     gap: Spacing.one 
+  },
+  
+  actorsList: {
+    gap: Spacing.two,
+    paddingRight: Spacing.two,
+  },
+  actorCard: {
+    width: 72,
+    alignItems: 'center',
+  },
+  actorImage: {
+    width: 72,
+    height: 108,
+    borderRadius: 8,
+  },
+  actorImagePlaceholder: {
+    backgroundColor: '#3a3a3a',
+  },
+  actorName: {
+    textAlign: 'center',
+    marginTop: Spacing.one,
   },
 });

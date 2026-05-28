@@ -1,27 +1,30 @@
-import { apiRequest } from './client';
+import { apiRequest, unwrapList } from './client';
 import type { GeneralStats, GenreStat, MovieDetail, MovieListItem, NamedEntity } from './types';
 
 export const movieApi = {
-  getMovies: (params?: {
+  getMovies: async (params?: {
     search?: string;
     genre?: string | number;
     tag?: string | number;
     ordering?: string;
-  }) => apiRequest<MovieListItem[]>('movies/', { params }),
+  }) => unwrapList<MovieListItem>(await apiRequest('movies/', { params })),
 
   getMovie: (id: number) => apiRequest<MovieDetail>(`movies/${id}/`),
 
-  getPopular: () => apiRequest<MovieListItem[]>('popular/'),
+  getPopular: async () => unwrapList<MovieListItem>(await apiRequest('popular/')),
 
-  getGenres: () => apiRequest<NamedEntity[]>('genres/'),
+  getGenres: async () => unwrapList<NamedEntity>(await apiRequest('genres/')),
 
-  getTags: () => apiRequest<NamedEntity[]>('tags/'),
+  getTags: async () => unwrapList<NamedEntity>(await apiRequest('tags/')),
 
-  getCountries: () => apiRequest<NamedEntity[]>('countries/'),
+  getCountries: async () => unwrapList<NamedEntity>(await apiRequest('countries/')),
 
-  getActors: () => apiRequest<{ id: number; name: string; photo: string | null }[]>('actors/'),
+  getActors: async () =>
+    unwrapList<{ id: number; name: string; photo: string | null }>(
+      await apiRequest('actors/'),
+    ),
 
-  getFavorites: () => apiRequest<MovieListItem[]>('favorites/'),
+  getFavorites: async () => unwrapList<MovieListItem>(await apiRequest('favorites/')),
 
   addFavorite: (movieId: number) =>
     apiRequest<{ message: string; created: boolean }>('favorites/', {

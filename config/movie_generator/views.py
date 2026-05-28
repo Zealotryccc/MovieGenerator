@@ -47,6 +47,7 @@ FAVORITE_ACTIONS = ('add_to_favorites', 'remove_from_favorites', 'is_favorite')
 GUEST_WRITE_ACTIONS = FAVORITE_ACTIONS + ('add_review',)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -270,9 +271,7 @@ class MovieViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def is_favorite(self, request, pk=None):
-        session_key = request.session.session_key
-        if not session_key:
-            return Response({'is_favorite': False})
+        session_key = get_or_create_session_key(request)
         return Response({
             'is_favorite': FavoriteService.is_favorite(session_key, pk),
         })

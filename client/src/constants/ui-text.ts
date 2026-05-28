@@ -2,10 +2,13 @@
 export const uiText = {
   movies: {
     title: 'Фильмы',
+    subtitle: 'Выберите фильм из каталога',
     searchPlaceholder: 'Поиск по названию...',
     genreAll: 'Все',
     empty: 'Нет фильмов',
     loadError: 'Не удалось загрузить фильмы',
+    countLabel: (n: number) =>
+      n === 0 ? 'Нет фильмов' : n === 1 ? '1 фильм' : `${n} фильмов`,
   },
   favorites: {
     title: 'Избранное',
@@ -21,6 +24,7 @@ export const uiText = {
     loadError: 'Не удалось загрузить данные',
   },
   movieDetail: {
+    actorsTitle: 'Актёры',
     favoriteAdd: 'В избранное',
     favoriteRemove: 'Убрать из избранного',
     reviewTitle: 'Оставить отзыв',
