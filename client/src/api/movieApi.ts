@@ -37,7 +37,6 @@ export const movieApi = {
   removeFavorite: (movieId: number) =>
     apiRequest<void>(`favorites/${movieId}/`, { method: 'DELETE' }),
 
-  // Более прямые endpoints на объекте фильма
   addToFavoritesByMovie: (movieId: number) =>
     apiRequest<{ message?: string }>(`movies/${movieId}/add_to_favorites/`, {
       method: 'POST',

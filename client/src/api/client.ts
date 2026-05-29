@@ -35,7 +35,6 @@ function buildUrl(path: string, params?: RequestOptions['params']) {
   return url.toString();
 }
 
-/** DRF может отдавать массив или { results: [...] }. */
 export function unwrapList<T>(data: unknown): T[] {
   if (Array.isArray(data)) {
     return data;

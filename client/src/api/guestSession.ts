@@ -14,7 +14,7 @@ function createGuestSessionKey(): string {
   return key.slice(0, 40);
 }
 
-/** Стабильный ключ гостя на устройстве (для заголовка X-Guest-Session). */
+
 export async function getGuestSessionKey(): Promise<string> {
   if (!cachedKey) {
     cachedKey = createGuestSessionKey();

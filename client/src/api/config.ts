@@ -57,7 +57,6 @@ function resolveApiBaseUrl(): string {
     return fromEnv;
   }
 
-  // Expo Web: запросы через dev-сервер (metro.config.js проксирует на Django)
   if (Platform.OS === 'web' && __DEV__) {
     if (typeof window !== 'undefined' && window.location?.origin) {
       return `${window.location.origin}${API_PATH}`;
