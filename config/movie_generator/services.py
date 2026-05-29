@@ -17,7 +17,9 @@ class MovieService:
         queryset = Movie.objects.all()
         
         if title:
-            queryset = queryset.filter(title__icontains=title)
+            queryset = queryset.filter(
+                Q(title__icontains=title) | Q(genres__name__icontains=title),
+            )
         
         if country_id:
             queryset = queryset.filter(country_id=country_id)
@@ -55,6 +57,10 @@ class MovieService:
         
         return queryset.distinct()
     
+    @staticmethod
+    def get_random_movie():
+        return Movie.objects.order_by('?').first()
+
     @staticmethod
     def get_popular_movies(limit=10, days=30):
         # Получить популярные фильмы (по количеству добавлений в избранное за последние N дней)
@@ -102,9 +108,10 @@ class MovieService:
         
         return Movie.objects.filter(
             Q(title__icontains=query) |
+            Q(genres__name__icontains=query) |
             Q(director__icontains=query) |
             Q(actors__name__icontains=query) |
-            Q(description__icontains=query)
+            Q(description__icontains=query),
         ).distinct()
 
     @staticmethod

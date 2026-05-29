@@ -148,6 +148,20 @@ class MovieViewSet(viewsets.ModelViewSet):
         return queryset
     
     @action(detail=False, methods=['get'])
+    def random(self, request):
+        """Случайный фильм из каталога."""
+        movie = MovieService.get_random_movie()
+        if not movie:
+            return Response(
+                {'error': 'No movies in database'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = MovieListSerializer(
+            movie, context={'request': request},
+        )
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
     def popular(self, request):
         """Получить популярные фильмы"""
         limit = request.query_params.get('limit', 10)

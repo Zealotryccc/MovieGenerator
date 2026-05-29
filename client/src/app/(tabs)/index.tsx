@@ -234,9 +234,9 @@ const styles = StyleSheet.create({
   genreChipActive: {
     transform: [{ scale: 1.02 }],
   },
-  movieList: { paddingBottom: BottomTabInset + Spacing.five },
+  movieList: { paddingBottom: BottomTabInset + Spacing.one },
   gridRow: {
-    gap: Spacing.two,
+    gap: Spacing.one,
     justifyContent: 'flex-start',
     marginBottom: Spacing.two,
   },

@@ -11,6 +11,8 @@ export const movieApi = {
 
   getMovie: (id: number) => apiRequest<MovieDetail>(`movies/${id}/`),
 
+  getRandomMovie: () => apiRequest<MovieListItem>('movies/random/'),
+
   getPopular: async () => unwrapList<MovieListItem>(await apiRequest('popular/')),
 
   getGenres: async () => unwrapList<NamedEntity>(await apiRequest('genres/')),

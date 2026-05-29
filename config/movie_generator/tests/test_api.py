@@ -39,6 +39,30 @@ def test_movies_list_filter_by_search(api_client, movie_with_relations):
 
 
 @pytest.mark.django_db
+def test_movies_list_filter_by_search_genre(api_client, movie_with_relations):
+    url = reverse("movie-list")
+    response = api_client.get(url, {"search": "Боев"})
+    assert response.status_code == 200
+    assert len(response.data) == 1
+    assert response.data[0]["title"] == "Начало"
+
+
+@pytest.mark.django_db
+def test_random_movie_endpoint(api_client, movie_with_relations):
+    url = reverse("movie-random")
+    response = api_client.get(url)
+    assert response.status_code == 200
+    assert response.data["title"] == "Начало"
+
+
+@pytest.mark.django_db
+def test_random_movie_endpoint_empty_db(api_client):
+    url = reverse("movie-random")
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_popular_endpoint(api_client, movie, favorite):
     url = reverse("popular")
     response = api_client.get(url)
