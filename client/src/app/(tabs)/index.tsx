@@ -143,7 +143,7 @@ export default function MoviesPage() {
           <FlatList
             data={movies}
             keyExtractor={(item) => String(item.id)}
-            numColumns={3}
+            numColumns={2}
             columnWrapperStyle={styles.gridRow}
             refreshControl={
               <RefreshControl

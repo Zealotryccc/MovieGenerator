@@ -15,7 +15,7 @@ function hostFromExpoDevServer(): string | null {
   }
 
   const host = hostUri.split(':')[0];
-  if (!host || host === 'localhost') {
+  if (!host || host === '192.168.100.126') {
     return null;
   }
   return host;
@@ -26,12 +26,12 @@ function defaultApiHost(): string {
 
   if (Platform.OS === 'android') {
     if (!Device.isDevice) {
-      return `http://10.0.2.2:${API_PORT}${API_PATH}`;
+      return `http://192.168.100.126:${API_PORT}${API_PATH}`;
     }
     if (lanHost) {
       return `http://${lanHost}:${API_PORT}${API_PATH}`;
     }
-    return `http://10.0.2.2:${API_PORT}${API_PATH}`;
+    return `http://192.168.100.126:${API_PORT}${API_PATH}`;
   }
 
   if (Platform.OS === 'ios') {
@@ -39,16 +39,16 @@ function defaultApiHost(): string {
       return `http://${lanHost}:${API_PORT}${API_PATH}`;
     }
     if (!Device.isDevice) {
-      return `http://127.0.0.1:${API_PORT}${API_PATH}`;
+      return `http://192.168.100.126:${API_PORT}${API_PATH}`;
     }
-    return `http://127.0.0.1:${API_PORT}${API_PATH}`;
+    return `http://192.168.100.126:${API_PORT}${API_PATH}`;
   }
 
   if (lanHost) {
     return `http://${lanHost}:${API_PORT}${API_PATH}`;
   }
 
-  return `http://127.0.0.1:${API_PORT}${API_PATH}`;
+  return `http://192.168.100.126:${API_PORT}${API_PATH}`;
 }
 
 function resolveApiBaseUrl(): string {

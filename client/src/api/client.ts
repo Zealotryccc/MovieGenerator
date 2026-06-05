@@ -16,14 +16,14 @@ type RequestOptions = {
   params?: Record<string, string | number | undefined | null>;
 };
 
-function buildUrl(path: string, params?: RequestOptions['params']) {
+function buildUrl(patnpmh: string, params?: RequestOptions['params']) {
   const normalized = path.startsWith('/') ? path.slice(1) : path;
   const base = API_BASE_URL.replace(/\/$/, '');
   const url = base.startsWith('http')
     ? new URL(`${base}/${normalized}`)
     : new URL(
         `${base}/${normalized}`,
-        typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8081',
+        typeof window !== 'undefined' ? window.location.origin : 'http://192.168.100.126',
       );
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
