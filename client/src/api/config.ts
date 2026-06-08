@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
-const API_PORT = 8000;
+const API_PORT = 8002;
 const API_PATH = '/movie_generator';
 
 function hostFromExpoDevServer(): string | null {
@@ -26,12 +26,12 @@ function defaultApiHost(): string {
 
   if (Platform.OS === 'android') {
     if (!Device.isDevice) {
-      return `http://192.168.100.126:${API_PORT}${API_PATH}`;
+      return `http://83.143.112.253:${API_PORT}${API_PATH}`;
     }
     if (lanHost) {
       return `http://${lanHost}:${API_PORT}${API_PATH}`;
     }
-    return `http://192.168.100.126:${API_PORT}${API_PATH}`;
+    return `http://83.143.112.253:${API_PORT}${API_PATH}`;
   }
 
   if (Platform.OS === 'ios') {
@@ -39,16 +39,16 @@ function defaultApiHost(): string {
       return `http://${lanHost}:${API_PORT}${API_PATH}`;
     }
     if (!Device.isDevice) {
-      return `http://192.168.100.126:${API_PORT}${API_PATH}`;
+      return `http://83.143.112.253:${API_PORT}${API_PATH}`;
     }
-    return `http://192.168.100.126:${API_PORT}${API_PATH}`;
+    return `http://83.143.112.253:${API_PORT}${API_PATH}`;
   }
 
   if (lanHost) {
     return `http://${lanHost}:${API_PORT}${API_PATH}`;
   }
 
-  return `http://192.168.100.126:${API_PORT}${API_PATH}`;
+  return `http://83.143.112.253:${API_PORT}${API_PATH}`;
 }
 
 function resolveApiBaseUrl(): string {
