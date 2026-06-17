@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "57897eb6-de62-429d-8b20-b30b009e279b"
+      }
+    },
+    "android": {
+      "package": "com.zealotryc1.moviegenerator"
+    }
+  }
+}
