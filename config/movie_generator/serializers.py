@@ -70,14 +70,21 @@ class MovieDetailSerializer(serializers.ModelSerializer):
     actors = ActorSerializer(many=True, read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
     
     class Meta:
         model = Movie
         fields = [
             'id', 'title', 'description', 'poster', 'release_date',
             'country', 'genres', 'tags', 'actors', 'director', 'duration',
-            'age_rating', 'created_at', 'reviews', 'is_favorited'
+            'age_rating', 'created_at', 'reviews', 'is_favorited', 'average_rating'
         ]
+    
+    def get_average_rating(self, obj):
+        reviews = obj.reviews.all()
+        if not reviews:
+            return None
+        return round(sum(r.rating for r in reviews) / len(reviews), 1)
     
     def get_is_favorited(self, obj):
         request = self.context.get('request')
