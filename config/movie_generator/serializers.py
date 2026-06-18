@@ -46,7 +46,7 @@ class MovieListSerializer(serializers.ModelSerializer):
         model = Movie
         fields = [
             'id', 'title', 'poster', 'release_date',
-            'country', 'genres', 'tags', 'duration', 'age_rating', 'is_favorited'
+            'country', 'genres', 'tags', 'duration', 'age_rating', 'is_favorited', 'trailer'
         ]
     
     def get_is_favorited(self, obj):
@@ -77,7 +77,7 @@ class MovieDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'poster', 'release_date',
             'country', 'genres', 'tags', 'actors', 'director', 'duration',
-            'age_rating', 'created_at', 'reviews', 'is_favorited', 'average_rating'
+            'age_rating', 'created_at', 'reviews', 'is_favorited', 'average_rating', 'trailer'
         ]
     
     def get_average_rating(self, obj):
@@ -104,7 +104,7 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
         model = Movie
         fields = [
             'id', 'title', 'description', 'poster', 'release_date',
-            'country', 'genres', 'tags', 'actors', 'director', 'duration', 'age_rating'
+            'country', 'genres', 'tags', 'actors', 'director', 'duration', 'age_rating', 'trailer'
         ]
         read_only_fields = ['id']
 
