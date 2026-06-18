@@ -52,7 +52,7 @@ class Movie(models.Model):
         max_length=5,
         choices=[('0+', '0+'), ('6+', '6+'), ('12+', '12+'), ('16+', '16+'), ('18+', '18+')]
     )
-    trailer = models.FileField(upload_to='trailers/', blank=True, null=True, verbose_name="Файл трейлера")
+    trailer_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Ссылка на трейлер")
     created_at = models.DateTimeField(default=timezone.now)
     
     class Meta:

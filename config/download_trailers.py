@@ -1,58 +1,72 @@
-import django, os, shutil, sys, subprocess
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-sys.path.insert(0, os.path.dirname(__file__))
-django.setup()
+import os, sys, subprocess, shutil
 
-from django.conf import settings
-from movie_generator.models import Movie
-
-TRAILER_DIR = os.path.join(settings.MEDIA_ROOT, 'trailers')
-os.makedirs(TRAILER_DIR, exist_ok=True)
+TRAILERS_DIR = os.path.join(os.path.dirname(__file__), '..', 'trailers')
+os.makedirs(TRAILERS_DIR, exist_ok=True)
 
 YT_DLP = shutil.which('yt-dlp') or shutil.which('youtube-dl')
 if not YT_DLP:
     print('yt-dlp не найден. Установи: pip install yt-dlp')
     sys.exit(1)
 
-from django.db.models import Q
-movies = Movie.objects.filter(Q(trailer__isnull=True) | Q(trailer=''))
-print(f'Найдено {len(movies)} фильмов без трейлеров')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+FFMPEG = shutil.which('ffmpeg') or os.path.join(SCRIPT_DIR, 'ffmpeg.exe')
+if not os.path.isfile(FFMPEG):
+    print('ffmpeg не найден. Положи ffmpeg.exe в папку config/')
+    sys.exit(1)
 
-for movie in movies:
-    query = f'{movie.title} {movie.director} фильм трейлер 2025'
-    filename = f'{movie.id}.mp4'
-    filepath = os.path.join(TRAILER_DIR, filename)
+movies = [
+    ('Криминальное чтиво', 1994),
+    ('Остров проклятых', 2010),
+    ('Великий отель "Будапешт"', 2014),
+    ('Индиана Джонс: В поисках утраченного ковчега', 1981),
+    ('Заклятие', 2013),
+    ('Дневник памяти', 2004),
+    ('Шерлок Холмс', 2009),
+    ('Гладиатор', 2000),
+    ('Унесённые призраками', 2001),
+    ('Спасти рядового Райана', 1998),
+    ('Один дома', 1990),
+    ('Вселенная Стивена Хокинга', 2014),
+    ('Джанго освобождённый', 2012),
+    ('Планета Земля', 2006),
+]
+
+for title, year in movies:
+    filename = f'{title}.mp4'
+    filepath = os.path.join(TRAILERS_DIR, filename)
 
     if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-        print(f'  ~ {movie.title} — уже скачан')
-        movie.trailer = f'trailers/{filename}'
-        movie.save(update_fields=['trailer'])
+        print(f'  ~ {title} — уже скачан')
         continue
 
-    print(f'  + Ищу трейлер для: {movie.title}...')
+    print(f'  + {title}...', end=' ')
+    sys.stdout.flush()
 
     try:
         subprocess.run([
             YT_DLP,
-            f'ytsearch1:{query}',
+            '--ffmpeg-location', SCRIPT_DIR,
+            f'ytsearch:{title} {year} трейлер на русском',
+            '--format-sort', '+res:720',
             '-f', 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]',
             '-o', filepath,
-            '--max-filesize', '200M',
+            '--max-filesize', '300M',
             '--no-playlist',
+            '--embed-metadata',
             '--quiet',
             '--no-warnings',
-        ], check=True, timeout=300)
+        ], check=True, timeout=600)
 
         if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
-            movie.trailer = f'trailers/{filename}'
-            movie.save(update_fields=['trailer'])
-            print(f'    ✓ Скачан: {movie.title}')
+            size = os.path.getsize(filepath) / 1024 / 1024
+            print(f'✓ {size:.1f} MB')
         else:
-            print(f'    ✗ Не удалось скачать: {movie.title}')
+            print('✗ не скачался')
 
     except subprocess.CalledProcessError:
-        print(f'    ✗ Ошибка при скачивании: {movie.title}')
-    except subprocess.TimeoutExpired:
-        print(f'    ✗ Таймаут: {movie.title}')
+        print('✗ не найдено')
+    except Exception as e:
+        print(f'✗ {e}')
 
-print('Готово!')
+print(f'\nГотово! Файлы в папке {TRAILERS_DIR}')
+print(f'Всего: {sum(1 for f in os.listdir(TRAILERS_DIR) if f.endswith(".mp4"))} трейлеров')
